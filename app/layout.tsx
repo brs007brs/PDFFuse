@@ -15,7 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="w-full bg-gradient-to-r from-[#7FFFD4] via-[#a0ffe6] to-[#7FFFD4] shadow-lg sticky top-0 z-20 drop-shadow-xl">
           <div className="max-w-6xl mx-auto flex items-center justify-between px-4 py-4">
             <Link href="/" className="flex items-center space-x-3">
-              <Image src="/pdf-fuse-logo.png" alt="PDFFuse Logo" width={56} height={56} className="rounded-lg shadow-md" />
+              <Image src="/pdffuse.png" alt="PDFFuse Logo" width={56} height={56} className="rounded-lg shadow-md" />
               <span className="text-3xl font-extrabold text-gray-900 tracking-tight" style={{ letterSpacing: "-0.03em" }}>PDFFuse</span>
             </Link>
             <nav className="hidden md:flex space-x-3">

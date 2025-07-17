@@ -51,19 +51,6 @@ const tools = [
 export default function Home() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-[#f8f9fa] p-8">
-      <header className="flex items-center gap-3 px-6 py-4 bg-[#7FFFD4]">
-        <Link href="/" className="flex items-center gap-2">
-          <Image
-            src="/pdffuse.png"
-            alt="PDFFuse Logo"
-            width={48}
-            height={48}
-            className="h-12 w-auto"
-            priority
-          />
-          <span className="text-3xl font-bold tracking-tight text-[#1cc3b2]">PDFFuse</span>
-        </Link>
-      </header>
       <h1 className="text-4xl font-bold mb-4 text-gray-900">All PDF Tools in One Place</h1>
       <p className="text-lg text-gray-700 mb-10 text-center max-w-2xl">Merge, split, compress, convert, and edit PDFs for free. No registration required. Fast, secure, and easy to use.</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 w-full max-w-4xl">
