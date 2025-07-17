@@ -1,16 +1,8 @@
 "use client";
 import { useState } from "react";
 
-const positions = [
-  { label: "Top Left", value: "top-left" },
-  { label: "Top Right", value: "top-right" },
-  { label: "Bottom Left", value: "bottom-left" },
-  { label: "Bottom Right", value: "bottom-right" },
-];
-
 export default function PageNumberPDF() {
   const [file, setFile] = useState<File | null>(null);
-  const [position, setPosition] = useState(positions[2].value);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,13 +12,13 @@ export default function PageNumberPDF() {
     }
   };
 
-  const handleAddNumbers = async () => {
+  const handlePageNumber = async () => {
+    if (!file) return;
     setLoading(true);
     setError(null);
     try {
       const formData = new FormData();
-      if (file) formData.append("file", file);
-      formData.append("position", position);
+      formData.append("file", file);
       const res = await fetch("/api/pagenumber", {
         method: "POST",
         body: formData,
@@ -50,11 +42,11 @@ export default function PageNumberPDF() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh]">
-      <div className="bg-white rounded-2xl shadow-xl border-2 border-transparent bg-clip-padding p-8 max-w-lg w-full relative" style={{ borderImage: 'linear-gradient(90deg, #7FFFD4 0%, #a0ffe6 100%) 1' }}>
+      <div className="bg-white rounded-2xl shadow-xl border-2 border-transparent bg-clip-padding p-8 max-w-lg w-full relative">
         <div className="flex flex-col items-center mb-6">
           <span className="text-5xl mb-2">🔢</span>
           <h2 className="text-3xl font-extrabold text-gray-900 mb-1 tracking-tight">Add Page Numbers</h2>
-          <p className="text-gray-600 text-base mb-2 text-center">Insert page numbers into your PDF. Fast, secure, and free.</p>
+          <p className="text-gray-600 text-base mb-2 text-center">Insert page numbers into your PDF.</p>
         </div>
         <input
           type="file"
@@ -62,21 +54,15 @@ export default function PageNumberPDF() {
           onChange={handleFileChange}
           className="mb-4 block w-full text-gray-700 border border-[#7FFFD4] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#7FFFD4]"
         />
-        <select
-          value={position}
-          onChange={e => setPosition(e.target.value)}
-          className="mb-4 block w-full border border-[#7FFFD4] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#7FFFD4] text-gray-700"
-        >
-          {positions.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
+        <div className="mb-4">
+          {file && <div className="text-gray-700 text-sm">{file.name}</div>}
+        </div>
         <button
-          onClick={handleAddNumbers}
+          onClick={handlePageNumber}
           className="w-full py-3 mt-2 rounded-xl bg-gradient-to-r from-[#7FFFD4] to-[#a0ffe6] text-gray-900 font-bold text-lg shadow hover:from-[#a0ffe6] hover:to-[#7FFFD4] transition disabled:opacity-50"
           disabled={!file || loading}
         >
-          {loading ? "Adding..." : "Add Page Numbers"}
+          {loading ? "Adding Page Numbers..." : "Add Page Numbers"}
         </button>
         {error && <div className="mt-4 text-red-600 text-center">{error}</div>}
       </div>
