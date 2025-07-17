@@ -29,11 +29,11 @@ export async function POST(req: NextRequest) {
     const { files } = await parseForm(req);
     const pdfFiles = normalizeFiles(files.file);
     if (!pdfFiles.length) {
-      return new NextResponse(JSON.stringify({ error: "No PDF file uploaded" }), { status: 400 });
+      return NextResponse.json({ error: "No PDF file uploaded" }, { status: 400 });
     }
     const file = pdfFiles[0];
     if (!file.mimetype?.includes("pdf")) {
-      return new NextResponse(JSON.stringify({ error: "File must be a PDF" }), { status: 400 });
+      return NextResponse.json({ error: "File must be a PDF" }, { status: 400 });
     }
     const pdfBytes = await readFile(file.filepath);
     const pdfDoc = await PDFDocument.load(pdfBytes);
@@ -57,6 +57,6 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err: any) {
-    return new NextResponse(JSON.stringify({ error: err.message || "Unknown error" }), { status: 500 });
+    return NextResponse.json({ error: err.message || "Unknown error" }, { status: 500 });
   }
 } 
