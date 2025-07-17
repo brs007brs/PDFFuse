@@ -18,7 +18,7 @@ function normalizeFiles(file: File | File[] | undefined): File[] {
 
 async function parseForm(req: NextRequest) {
   return new Promise<{ files: Files }>((resolve, reject) => {
-    const form = formidable({ multiples: true });
+    const form = formidable({ multiples: true, maxFileSize: 50 * 1024 * 1024, maxFiles: 10, timeout: 30000 });
     form.parse(req as any, (err: any, fields: Fields, files: Files) => {
       if (err) reject(err);
       else resolve({ files });
@@ -31,9 +31,13 @@ export async function POST(req: NextRequest) {
     // Parse uploaded files
     const { files } = await parseForm(req);
     const pdfFiles = normalizeFiles(files.file);
-    if (!pdfFiles.length) throw new Error("No PDF files uploaded");
+    if (!pdfFiles.length) {
+      return new NextResponse(JSON.stringify({ error: "No PDF files uploaded" }), { status: 400 });
+    }
     for (const file of pdfFiles) {
-      if (!file.mimetype?.includes("pdf")) throw new Error("All files must be PDFs");
+      if (!file.mimetype?.includes("pdf")) {
+        return new NextResponse(JSON.stringify({ error: "All files must be PDFs" }), { status: 400 });
+      }
     }
     const pdfBuffers = await Promise.all(
       pdfFiles.map(async (file) => readFile(file.filepath))
@@ -56,6 +60,6 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return new NextResponse(JSON.stringify({ error: err.message || "Unknown error" }), { status: 500 });
   }
 } 
