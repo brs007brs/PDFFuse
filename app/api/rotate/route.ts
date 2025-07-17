@@ -3,7 +3,11 @@ import { PDFDocument, degrees } from "pdf-lib";
 import formidable, { Fields, Files, File } from "formidable";
 import { readFile } from "fs/promises";
 
-export const config = { api: { bodyParser: false } };
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
 function normalizeFiles(file: File | File[] | undefined): File[] {
   if (!file) return [];
@@ -11,30 +15,32 @@ function normalizeFiles(file: File | File[] | undefined): File[] {
 }
 
 async function parseForm(req: NextRequest) {
-  return new Promise<{ fields: Fields; files: Files }>((resolve, reject) => {
-    const form = formidable({ multiples: false });
+  return new Promise<{ files: Files }>((resolve, reject) => {
+    const form = formidable({ multiples: true, maxFileSize: 50 * 1024 * 1024, maxFiles: 10 });
     form.parse(req as any, (err: any, fields: Fields, files: Files) => {
       if (err) reject(err);
-      else resolve({ fields, files });
+      else resolve({ files });
     });
   });
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { fields, files } = await parseForm(req);
+    const { files } = await parseForm(req);
     const pdfFiles = normalizeFiles(files.file);
-    if (!pdfFiles.length) throw new Error("No PDF file uploaded");
+    if (!pdfFiles.length) {
+      return new NextResponse(JSON.stringify({ error: "No PDF file uploaded" }), { status: 400 });
+    }
     const file = pdfFiles[0];
-    if (!file.mimetype?.includes("pdf")) throw new Error("File must be a PDF");
+    if (!file.mimetype?.includes("pdf")) {
+      return new NextResponse(JSON.stringify({ error: "File must be a PDF" }), { status: 400 });
+    }
     const pdfBytes = await readFile(file.filepath);
-    const angleField = fields.angle;
-    const angle = Array.isArray(angleField) ? parseInt(angleField[0], 10) : parseInt(angleField as string, 10) || 0;
-
     const pdfDoc = await PDFDocument.load(pdfBytes);
-    pdfDoc.getPages().forEach(page => page.setRotation(degrees(angle)));
+    pdfDoc.getPages().forEach((page) => {
+      page.setRotation(degrees(90));
+    });
     const rotatedBytes = await pdfDoc.save();
-
     return new NextResponse(Buffer.from(rotatedBytes), {
       status: 200,
       headers: {
@@ -43,6 +49,6 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return new NextResponse(JSON.stringify({ error: err.message || "Unknown error" }), { status: 500 });
   }
 } 
