@@ -7,16 +7,90 @@ const conversionOptions = [
 ];
 
 export default function ConvertPDF() {
+  const [option, setOption] = useState(conversionOptions[0].value);
+  const [files, setFiles] = useState<File[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFiles(Array.from(e.target.files));
+    }
+  };
+
+  const handleConvert = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      files.forEach((file) => formData.append(option === "pdf-to-jpg" ? "file" : "files", file));
+      const res = await fetch(`/api/${option}`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Failed to convert file(s)");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = option === "pdf-to-jpg" ? "page-1.jpg" : "output.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setError(err.message || "Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh]">
       <div className="bg-white rounded-2xl shadow-xl border-2 border-transparent bg-clip-padding p-8 max-w-lg w-full relative">
         <div className="flex flex-col items-center mb-6">
-          <span className="text-5xl mb-2">🚫</span>
+          <span className="text-5xl mb-2">{option === "pdf-to-jpg" ? "🖼️" : "🖼️"}</span>
           <h2 className="text-3xl font-extrabold text-gray-900 mb-1 tracking-tight">Convert PDF</h2>
-          <p className="text-gray-600 text-base mb-2 text-center">
-            PDF-to-JPG and JPG-to-PDF conversion is not supported on Vercel.<br />
-            Please use the other PDF tools (merge, split, compress, rotate, watermark, page numbers).
-          </p>
+          <div className="flex gap-4 mb-4">
+            {conversionOptions.map((opt) => (
+              <button
+                key={opt.value}
+                className={`px-4 py-2 rounded-lg font-semibold border ${option === opt.value ? "bg-[#7FFFD4] border-[#7FFFD4]" : "bg-gray-100 border-gray-300"}`}
+                onClick={() => {
+                  setOption(opt.value);
+                  setFiles([]);
+                  setError(null);
+                }}
+                disabled={loading}
+              >
+                {opt.icon} {opt.label}
+              </button>
+            ))}
+          </div>
+          <input
+            type="file"
+            accept={option === "pdf-to-jpg" ? "application/pdf" : "image/jpeg,image/jpg"}
+            multiple={option === "jpg-to-pdf"}
+            onChange={handleFileChange}
+            className="mb-4 block w-full text-gray-700 border border-[#7FFFD4] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#7FFFD4]"
+          />
+          <div className="mb-4">
+            {files.length > 0 && (
+              <ul className="list-disc pl-5 text-gray-700 text-sm">
+                {files.map((file, idx) => (
+                  <li key={idx}>{file.name}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <button
+            onClick={handleConvert}
+            className="w-full py-3 mt-2 rounded-xl bg-gradient-to-r from-[#7FFFD4] to-[#a0ffe6] text-gray-900 font-bold text-lg shadow hover:from-[#a0ffe6] hover:to-[#7FFFD4] transition disabled:opacity-50"
+            disabled={files.length === 0 || loading}
+          >
+            {loading ? (option === "pdf-to-jpg" ? "Converting to JPG..." : "Converting to PDF...") : (option === "pdf-to-jpg" ? "Convert to JPG" : "Convert to PDF")}
+          </button>
+          {error && <div className="mt-4 text-red-600 text-center">{error}</div>}
         </div>
       </div>
     </div>
